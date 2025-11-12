@@ -1,14 +1,60 @@
-.venv/
+# Python
 __pycache__/
-.mypy_cache/
-.ruff_cache/
-.pytest_cache/
 *.py[cod]
-*.db
-data/
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.egg-info/
 dist/
 build/
-node_modules/
-*.log
-*.sqlite3
 
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Tauri
+src-tauri/target/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
