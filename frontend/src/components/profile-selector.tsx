@@ -113,13 +113,29 @@ export const ProfileSelector: React.FC = () => {
         <ChevronDown className="h-3 w-3 opacity-70 transition group-open:rotate-180" />
       </summary>
       <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-white/10 bg-slate-900/95 p-2 shadow-xl backdrop-blur">
-        {!filteredProfiles.length && (
-          <p className="px-3 py-2 text-xs text-slate-400">No hay perfiles configurados.</p>
+        {isLoading && (
+          <p className="px-3 py-2 text-xs text-slate-400">Cargando perfiles...</p>
+        )}
+        {error && (
+          <p className="px-3 py-2 text-xs text-red-400">Error: {String(error)}</p>
+        )}
+        {!isLoading && !error && !filteredProfiles.length && (
+          <p className="px-3 py-2 text-xs text-slate-400">
+            No hay perfiles configurados.
+            {profiles && profiles.length > 0 && (
+              <span className="block mt-1 text-amber-400">
+                (Se encontraron {profiles.length} pero fueron filtrados)
+              </span>
+            )}
+          </p>
         )}
         {filteredProfiles.map((profile: Profile) => (
           <button
             key={profile.id}
-            onClick={() => setActiveProfile(profile)}
+            onClick={() => {
+              console.log("ProfileSelector - Click en perfil:", profile.name);
+              setActiveProfile(profile);
+            }}
             className={[
               "w-full rounded-xl px-3 py-2 text-left text-sm transition",
               activeProfile?.id === profile.id
