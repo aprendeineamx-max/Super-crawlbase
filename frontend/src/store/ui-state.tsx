@@ -22,6 +22,13 @@ export const useUiState = create<UiState>()(
       name: "crawlbase-active-profile",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ activeProfile: state.activeProfile }),
+      // Revalidar el perfil al cargar desde localStorage
+      onRehydrateStorage: () => (state) => {
+        // Si el perfil cargado no tiene todos los campos necesarios, limpiarlo
+        if (state?.activeProfile && (!state.activeProfile.id || !state.activeProfile.name)) {
+          state.activeProfile = null;
+        }
+      },
     }
   )
 );
