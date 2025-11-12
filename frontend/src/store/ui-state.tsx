@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { StateCreator } from "zustand";
 import { Profile } from "@/lib/api-client";
 
@@ -14,5 +15,14 @@ const createUiState: StateCreator<UiState, [], [], UiState> = (set) => ({
   },
 });
 
-export const useUiState = create<UiState>(createUiState);
+export const useUiState = create<UiState>()(
+  persist(
+    createUiState,
+    {
+      name: "crawlbase-active-profile",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ activeProfile: state.activeProfile }),
+    }
+  )
+);
 

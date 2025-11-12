@@ -24,20 +24,37 @@ export const ProfileSelector: React.FC = () => {
   }, [profiles]);
 
   useEffect(() => {
-    if (filteredProfiles.length > 0) {
-      // Buscar el perfil demo primero, si no existe, usar el primero disponible
-      const demoProfile = filteredProfiles.find((p: Profile) => 
-        p.name.toLowerCase().includes("demo") || 
-        p.name.toLowerCase().includes("perfil demo")
-      );
-      const profileToSelect = demoProfile || filteredProfiles[0];
-      
-      // Solo actualizar si no hay perfil activo o si el perfil activo no está en la lista
-      if (!activeProfile || !filteredProfiles.find((p: Profile) => p.id === activeProfile.id)) {
-        setActiveProfile(profileToSelect);
+    // Solo ejecutar cuando los perfiles se carguen completamente
+    if (isLoading) return;
+    
+    if (filteredProfiles.length === 0) {
+      console.log("No hay perfiles disponibles");
+      return;
+    }
+
+    // Si ya hay un perfil activo y está en la lista, mantenerlo
+    if (activeProfile) {
+      const isStillValid = filteredProfiles.some((p: Profile) => p.id === activeProfile.id);
+      if (isStillValid) {
+        console.log("Perfil activo válido:", activeProfile.name);
+        return;
       }
     }
-  }, [filteredProfiles, activeProfile, setActiveProfile]);
+
+    // Buscar el perfil demo primero, si no existe, usar el primero disponible
+    const demoProfile = filteredProfiles.find((p: Profile) => 
+      p.name.toLowerCase().includes("demo") || 
+      p.name.toLowerCase().includes("perfil demo") ||
+      p.name.toLowerCase() === "perfil demo crawlbase"
+    );
+    
+    const profileToSelect = demoProfile || filteredProfiles[0];
+    
+    if (profileToSelect) {
+      console.log("Seleccionando perfil automáticamente:", profileToSelect.name, "ID:", profileToSelect.id);
+      setActiveProfile(profileToSelect);
+    }
+  }, [filteredProfiles, activeProfile, setActiveProfile, isLoading]);
 
   const label = activeProfile ? activeProfile.name : "Perfil";
 
