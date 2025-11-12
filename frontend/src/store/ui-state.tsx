@@ -33,3 +33,6 @@ export const useUiState = create<UiState>()(
   )
 );
 
+// Exportar el store directamente para acceso a getState
+export const uiStore = useUiState;
+

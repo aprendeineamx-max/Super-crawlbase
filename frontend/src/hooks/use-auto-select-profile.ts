@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, Profile } from "@/lib/api-client";
-import { useUiState, useUiState as useUiStateStore } from "@/store/ui-state";
+import { useUiState, uiStore } from "@/store/ui-state";
 
 /**
  * Hook que fuerza la selección automática del perfil demo al cargar
