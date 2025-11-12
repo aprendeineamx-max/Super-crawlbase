@@ -13,8 +13,13 @@ export const profileSchema = z.object({
   id: z.number(),
   name: z.string(),
   description: z.string().nullable(),
+  is_active: z.boolean().optional(),
   default_product: z.string().nullable(),
+  tags: z.array(z.string()).optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
   tokens: profileTokensSchema.optional(),
+  metadata: z.record(z.any()).nullable().optional(),
 });
 
 export type Profile = z.infer<typeof profileSchema>;
@@ -115,8 +120,16 @@ async function request<T>(path: string, init?: RequestInit) {
 export const api = {
   profiles: {
     list: async () => {
-      const data = await request<unknown>("/profiles");
-      return z.array(profileSchema).parse(data);
+      try {
+        const data = await request<unknown>("/profiles");
+        console.log("API - Perfiles recibidos del backend:", data);
+        const parsed = z.array(profileSchema).parse(data);
+        console.log("API - Perfiles parseados correctamente:", parsed);
+        return parsed;
+      } catch (error) {
+        console.error("API - Error al obtener perfiles:", error);
+        throw error;
+      }
     },
     get: async (profileId: number) => {
       const data = await request<unknown>(`/profiles/${profileId}?include_tokens=true`);

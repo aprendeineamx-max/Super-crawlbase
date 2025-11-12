@@ -6,10 +6,25 @@ import { ChevronDown, User } from "lucide-react";
 
 export const ProfileSelector: React.FC = () => {
   const { activeProfile, setActiveProfile } = useUiState();
-  const { data: profiles, isLoading } = useQuery({
+  const { data: profiles, isLoading, error } = useQuery({
     queryKey: ["profiles"],
     queryFn: api.profiles.list,
+    retry: 2,
+    retryDelay: 1000,
   });
+
+  // Debug: Log cuando cambian los perfiles
+  React.useEffect(() => {
+    console.log("ProfileSelector - Estado:", { 
+      isLoading, 
+      profilesCount: profiles?.length ?? 0, 
+      hasActiveProfile: !!activeProfile,
+      error: error ? String(error) : null
+    });
+    if (profiles && profiles.length > 0) {
+      console.log("ProfileSelector - Perfiles encontrados:", profiles.map((p: Profile) => ({ id: p.id, name: p.name })));
+    }
+  }, [profiles, isLoading, activeProfile, error]);
 
   // Filtrar perfiles que no sean "Nuevo Perfil" (case-insensitive y más estricto)
   const filteredProfiles = React.useMemo(() => {
@@ -25,36 +40,54 @@ export const ProfileSelector: React.FC = () => {
 
   useEffect(() => {
     // Solo ejecutar cuando los perfiles se carguen completamente
-    if (isLoading) return;
+    if (isLoading) {
+      console.log("ProfileSelector - Esperando carga de perfiles...");
+      return;
+    }
+    
+    if (error) {
+      console.error("ProfileSelector - Error cargando perfiles:", error);
+      return;
+    }
     
     if (filteredProfiles.length === 0) {
-      console.log("No hay perfiles disponibles");
+      console.log("ProfileSelector - No hay perfiles disponibles después del filtrado");
+      if (profiles && profiles.length > 0) {
+        console.log("ProfileSelector - Perfiles antes del filtrado:", profiles.map((p: Profile) => p.name));
+      }
       return;
     }
 
+    console.log("ProfileSelector - Perfiles filtrados:", filteredProfiles.map((p: Profile) => ({ id: p.id, name: p.name })));
+
     // Si ya hay un perfil activo y está en la lista, mantenerlo
-    if (activeProfile) {
+    if (activeProfile && activeProfile.id) {
       const isStillValid = filteredProfiles.some((p: Profile) => p.id === activeProfile.id);
       if (isStillValid) {
-        console.log("Perfil activo válido:", activeProfile.name);
+        console.log("ProfileSelector - Perfil activo válido, manteniendo:", activeProfile.name);
         return;
+      } else {
+        console.log("ProfileSelector - Perfil activo ya no válido, buscando nuevo");
       }
     }
 
     // Buscar el perfil demo primero, si no existe, usar el primero disponible
-    const demoProfile = filteredProfiles.find((p: Profile) => 
-      p.name.toLowerCase().includes("demo") || 
-      p.name.toLowerCase().includes("perfil demo") ||
-      p.name.toLowerCase() === "perfil demo crawlbase"
-    );
+    const demoProfile = filteredProfiles.find((p: Profile) => {
+      const nameLower = p.name.toLowerCase();
+      return nameLower.includes("demo") || 
+             nameLower.includes("perfil demo") ||
+             nameLower === "perfil demo crawlbase";
+    });
     
     const profileToSelect = demoProfile || filteredProfiles[0];
     
     if (profileToSelect) {
-      console.log("Seleccionando perfil automáticamente:", profileToSelect.name, "ID:", profileToSelect.id);
+      console.log("ProfileSelector - Seleccionando perfil automáticamente:", profileToSelect.name, "ID:", profileToSelect.id);
       setActiveProfile(profileToSelect);
+    } else {
+      console.error("ProfileSelector - No se pudo seleccionar ningún perfil");
     }
-  }, [filteredProfiles, activeProfile, setActiveProfile, isLoading]);
+  }, [filteredProfiles, activeProfile, setActiveProfile, isLoading, error, profiles]);
 
   const label = activeProfile ? activeProfile.name : "Perfil";
 
