@@ -103,18 +103,29 @@ const dashboardUsageSchema = z.object({
 export type DashboardUsage = z.infer<typeof dashboardUsageSchema>;
 
 async function request<T>(path: string, init?: RequestInit) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-  });
-  if (!response.ok) {
-    const detail = await response.json().catch(() => ({}));
-    throw new Error(detail.detail ?? `Error ${response.status}`);
+  const url = `${API_BASE}${path}`;
+  console.log("API - Realizando petición a:", url);
+  try {
+    const response = await fetch(url, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers ?? {}),
+      },
+    });
+    console.log("API - Respuesta recibida:", response.status, response.statusText);
+    if (!response.ok) {
+      const detail = await response.json().catch(() => ({}));
+      console.error("API - Error en respuesta:", detail);
+      throw new Error(detail.detail ?? `Error ${response.status}`);
+    }
+    const data = await response.json();
+    console.log("API - Datos parseados:", data);
+    return data as T;
+  } catch (error) {
+    console.error("API - Error en petición:", error);
+    throw error;
   }
-  return (await response.json()) as T;
 }
 
 export const api = {
