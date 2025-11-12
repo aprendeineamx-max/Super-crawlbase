@@ -2,15 +2,21 @@ import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, Profile } from "@/lib/api-client";
 import { useUiState } from "@/store/ui-state";
+import { useAutoSelectProfile } from "@/hooks/use-auto-select-profile";
 import { ChevronDown, User } from "lucide-react";
 
 export const ProfileSelector: React.FC = () => {
   const { activeProfile, setActiveProfile } = useUiState();
+  
+  // Usar el hook personalizado para forzar la selección automática
+  useAutoSelectProfile();
+  
   const { data: profiles, isLoading, error } = useQuery({
     queryKey: ["profiles"],
     queryFn: api.profiles.list,
-    retry: 2,
+    retry: 3,
     retryDelay: 1000,
+    refetchOnMount: true,
   });
 
   // Debug: Log cuando cambian los perfiles
