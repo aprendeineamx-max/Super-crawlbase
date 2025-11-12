@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crawlbase-desktop-backend"
+version = "0.1.0"
+description = "Backend FastAPI para la suite de escritorio multi-perfil de Crawlbase"
+authors = [
+  { name = "Equipo Crawlbase Desktop", email = "dev@example.com" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.30",
+  "sqlmodel>=0.0.16",
+  "alembic>=1.13",
+  "httpx>=0.26",
+  "pydantic-settings>=2.3",
+  "python-multipart>=0.0.9",
+  "cryptography>=42.0",
+  "passlib[bcrypt]>=1.7.4",
+  "typer[all]>=0.12",
+  "rich>=13.7",
+  "celery>=5.4",
+  "redis>=5.0",
+  "openpyxl>=3.1",
+  "pandas>=2.2",
+  "python-slugify>=8.0",
+  "python-dotenv>=1.0",
+  "orjson>=3.10"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2",
+  "pytest-asyncio>=0.23",
+  "pytest-cov>=4.1",
+  "mypy>=1.10",
+  "ruff>=0.5",
+  "black>=24.4",
+  "isort>=5.13"
+]
+
+[tool.setuptools.packages.find]
+where = ["app"]
+include = ["app*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = [
+  "E", "F", "I", "N", "ASYNC", "UP", "S", "B"
+]
+ignore = ["B008"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+strict_optional = true
+disallow_untyped_defs = true
+plugins = ["pydantic.mypy"]
+

@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+app/crawlbase_desktop_backend.egg-info/PKG-INFO
+app/crawlbase_desktop_backend.egg-info/SOURCES.txt
+app/crawlbase_desktop_backend.egg-info/dependency_links.txt
+app/crawlbase_desktop_backend.egg-info/requires.txt
+app/crawlbase_desktop_backend.egg-info/top_level.txt
+tests/test_analytics_service.py
+tests/test_dashboard_cache.py
+tests/test_docs_catalog.py
+tests/test_docs_router.py
+tests/test_link_factory.py
+tests/test_profiles_seed.py
+tests/test_projects_schema.py

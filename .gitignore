@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.py[cod]
+*.db
+data/
+dist/
+build/
+node_modules/
+*.log
+*.sqlite3
+

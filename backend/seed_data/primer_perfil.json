@@ -1,0 +1,16 @@
+{
+  "name": "Perfil Demo Crawlbase",
+  "description": "Credenciales de muestra para pruebas locales con la suite de escritorio.",
+  "is_active": true,
+  "default_product": "crawling-api",
+  "tags": ["demo", "qa", "seed"],
+  "token_normal": "9sTH5F1Pj_BziIRkn1JxXQ",
+  "token_js": "sHhCnCgqjuVps4e32yKdAQ",
+  "token_proxy": "9sTH5F1Pj_BziIRkn1JxXQ",
+  "token_storage": "9sTH5F1Pj_BziIRkn1JxXQ",
+  "metadata": {
+    "notes": "Credenciales entregadas por el usuario para propósitos de prueba. Rotar antes de producción.",
+    "owner_email": "aprendeniea.mx@gmail.com"
+  }
+}
+
