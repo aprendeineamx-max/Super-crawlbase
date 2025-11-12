@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, Profile } from "@/lib/api-client";
-import { useUiState, uiStore } from "@/store/ui-state";
+import { useUiState, getUiState } from "@/store/ui-state";
 
 /**
  * Hook que fuerza la selección automática del perfil demo al cargar
@@ -68,9 +68,19 @@ export const useAutoSelectProfile = () => {
     const profileToSelect = demoProfile || validProfiles[0];
 
     if (profileToSelect) {
-      console.log("useAutoSelectProfile - Seleccionando perfil:", profileToSelect.name);
+      console.log("useAutoSelectProfile - Seleccionando perfil:", profileToSelect.name, "ID:", profileToSelect.id);
       // Forzar selección inmediatamente
       setActiveProfile(profileToSelect);
+      // Respaldo: verificar después de un breve delay
+      setTimeout(() => {
+        const current = getUiState().activeProfile;
+        if (!current || current.id !== profileToSelect.id) {
+          console.log("useAutoSelectProfile - Reintentando selección...");
+          setActiveProfile(profileToSelect);
+        } else {
+          console.log("useAutoSelectProfile - Perfil confirmado:", current.name);
+        }
+      }, 200);
     }
   }, [profiles, isLoading, error, activeProfile, setActiveProfile]);
 

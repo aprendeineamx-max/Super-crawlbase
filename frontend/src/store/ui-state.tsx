@@ -35,4 +35,6 @@ export const useUiState = create<UiState>()(
 
 // Exportar el store directamente para acceso a getState
 export const uiStore = useUiState;
+// También exportar getState directamente
+export const getUiState = () => useUiState.getState();
 

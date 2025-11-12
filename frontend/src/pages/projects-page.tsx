@@ -8,9 +8,16 @@ import { Plus } from "lucide-react";
 export const ProjectsPage: React.FC = () => {
   const { activeProfile } = useUiState();
 
-  const { data, isLoading } = useQuery<Project[]>({
+  const { data, isLoading, error } = useQuery<Project[]>({
     queryKey: ["projects", activeProfile?.id],
-    queryFn: () => api.projects.list(activeProfile?.id),
+    queryFn: () => {
+      if (!activeProfile?.id) {
+        throw new Error("No hay perfil activo");
+      }
+      return api.projects.list(activeProfile.id);
+    },
+    enabled: !!activeProfile?.id,
+    retry: 2,
   });
 
   const projects: Project[] = Array.isArray(data) ? data : [];
@@ -33,9 +40,23 @@ export const ProjectsPage: React.FC = () => {
         </Link>
       </header>
 
-      {isLoading && <p className="text-sm text-slate-400">Cargando proyectos...</p>}
+      {!activeProfile && (
+        <div className="card p-6 text-center text-sm text-amber-300">
+          Selecciona un perfil para ver los proyectos.
+        </div>
+      )}
 
-      {!isLoading && projects.length === 0 && (
+      {activeProfile && isLoading && (
+        <p className="text-sm text-slate-400">Cargando proyectos...</p>
+      )}
+
+      {activeProfile && error && (
+        <div className="card p-6 text-center text-sm text-red-400">
+          Error al cargar proyectos: {error instanceof Error ? error.message : String(error)}
+        </div>
+      )}
+
+      {activeProfile && !isLoading && !error && projects.length === 0 && (
         <div className="card p-6 text-center text-sm text-slate-300">
           No hay proyectos registrados. Crea uno nuevo para comenzar.
         </div>
