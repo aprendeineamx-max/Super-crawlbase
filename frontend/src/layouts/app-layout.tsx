@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileSelector } from "@/components/profile-selector";
+import { useAutoSelectProfile } from "@/hooks/use-auto-select-profile";
 
 const routes = [
   { to: "/", label: "Dashboard" },
@@ -11,6 +12,9 @@ const routes = [
 ];
 
 export const AppLayout: React.FC = () => {
+  // Forzar selección automática del perfil demo al cargar el layout
+  useAutoSelectProfile();
+  
   const navigation = useMemo(
     () =>
       routes.map((route) => (
