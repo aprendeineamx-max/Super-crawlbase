@@ -36,6 +36,8 @@ export const DebugPanel: React.FC = () => {
 
   const checkBackend = async () => {
     setLastAction("Verificando backend...");
+    
+    // Intentar primero con el proxy de Vite
     try {
       const response = await fetch("/api/health", {
         method: "GET",
@@ -44,7 +46,7 @@ export const DebugPanel: React.FC = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setLastAction(`✓ Backend está funcionando correctamente (${data.status || "OK"})`);
+        setLastAction(`✓ Backend está funcionando (vía proxy)`);
         
         // También verificar perfiles
         try {
@@ -56,10 +58,30 @@ export const DebugPanel: React.FC = () => {
             setLastAction(`✓ Backend OK - ${profiles.length} perfil(es) disponible(s)`);
           }
         } catch (e) {
-          // Ignorar error de perfiles, el backend está funcionando
+          // Ignorar error de perfiles
         }
+        return;
       } else {
         setLastAction(`⚠ Backend responde pero con error (${response.status})`);
+        return;
+      }
+    } catch (proxyError) {
+      // Si falla el proxy, intentar directamente
+      console.log("Proxy falló, intentando conexión directa...", proxyError);
+    }
+    
+    // Intentar conexión directa como respaldo
+    try {
+      const directResponse = await fetch("http://127.0.0.1:8000/api/health", {
+        method: "GET",
+        signal: AbortSignal.timeout(5000),
+        mode: "cors",
+      });
+      
+      if (directResponse.ok) {
+        setLastAction(`✓ Backend está funcionando (conexión directa)`);
+      } else {
+        setLastAction(`⚠ Backend responde pero con error (${directResponse.status})`);
       }
     } catch (error) {
       setLastAction("✗ Backend no está disponible. Verifica que esté corriendo en http://127.0.0.1:8000");
