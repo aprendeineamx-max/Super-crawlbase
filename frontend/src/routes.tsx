@@ -5,6 +5,7 @@ import { DashboardPage } from "@/pages/dashboard-page";
 import { ProjectsPage } from "@/pages/projects-page";
 import { DocumentationPage } from "@/pages/documentation-page";
 import { ScrapersPage } from "@/pages/scrapers-page";
+import { ProfileCreatePage } from "@/pages/profile-create-page";
 
 export const routes = createBrowserRouter([
   {
