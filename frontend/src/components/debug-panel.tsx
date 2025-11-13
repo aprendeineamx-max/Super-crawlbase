@@ -37,18 +37,33 @@ export const DebugPanel: React.FC = () => {
   const checkBackend = async () => {
     setLastAction("Verificando backend...");
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/health", {
+      const response = await fetch("/api/health", {
         method: "GET",
         signal: AbortSignal.timeout(5000),
       });
       
       if (response.ok) {
-        setLastAction("✓ Backend está funcionando correctamente");
+        const data = await response.json();
+        setLastAction(`✓ Backend está funcionando correctamente (${data.status || "OK"})`);
+        
+        // También verificar perfiles
+        try {
+          const profilesResponse = await fetch("/api/profiles", {
+            signal: AbortSignal.timeout(5000),
+          });
+          if (profilesResponse.ok) {
+            const profiles = await profilesResponse.json();
+            setLastAction(`✓ Backend OK - ${profiles.length} perfil(es) disponible(s)`);
+          }
+        } catch (e) {
+          // Ignorar error de perfiles, el backend está funcionando
+        }
       } else {
-        setLastAction("⚠ Backend responde pero con error");
+        setLastAction(`⚠ Backend responde pero con error (${response.status})`);
       }
     } catch (error) {
       setLastAction("✗ Backend no está disponible. Verifica que esté corriendo en http://127.0.0.1:8000");
+      console.error("Error verificando backend:", error);
     }
   };
 
