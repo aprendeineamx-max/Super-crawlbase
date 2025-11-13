@@ -15,7 +15,9 @@ class Settings(BaseSettings):
     cors_allowed_origins: List[str] = Field(
         default_factory=lambda: [
             "http://localhost",
+            "http://localhost:5173",
             "http://127.0.0.1",
+            "http://127.0.0.1:5173",
             "tauri://localhost",
             "capacitor://localhost",
         ],
