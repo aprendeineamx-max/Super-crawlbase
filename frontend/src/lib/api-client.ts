@@ -112,6 +112,8 @@ async function request<T>(path: string, init?: RequestInit) {
         "Content-Type": "application/json",
         ...(init?.headers ?? {}),
       },
+      // Agregar timeout y mejor manejo de errores de red
+      signal: AbortSignal.timeout(10000), // 10 segundos timeout
     });
     console.log("API - Respuesta recibida:", response.status, response.statusText);
     if (!response.ok) {
@@ -123,6 +125,12 @@ async function request<T>(path: string, init?: RequestInit) {
     console.log("API - Datos parseados:", data);
     return data as T;
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === 'AbortError' || error.message.includes('Failed to fetch')) {
+        console.error("API - Error de conexión. Verifica que el backend esté corriendo en http://127.0.0.1:8000");
+        throw new Error("No se pudo conectar al servidor. Verifica que el backend esté corriendo.");
+      }
+    }
     console.error("API - Error en petición:", error);
     throw error;
   }
