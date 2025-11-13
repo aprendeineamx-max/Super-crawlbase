@@ -122,17 +122,27 @@ export const useAutoSelectProfile = () => {
       console.log("useAutoSelectProfile - FORZANDO selección de perfil:", profileToSelect.name, "ID:", profileToSelect.id);
       hasSelectedRef.current = true;
       
-      // Selección inmediata
+      // Selección inmediata y agresiva
       setActiveProfile(profileToSelect);
       
-      // Múltiples reintentos para asegurar que se guarde
-      const retryDelays = [100, 300, 500, 1000];
+      // Múltiples reintentos más agresivos para asegurar que se guarde
+      const retryDelays = [50, 150, 300, 500, 1000, 2000];
       retryDelays.forEach((delay) => {
         setTimeout(() => {
           const current = getUiState().activeProfile;
           if (!current || current.id !== profileToSelect.id) {
             console.log(`useAutoSelectProfile - Reintentando selección (delay ${delay}ms)...`);
             setActiveProfile(profileToSelect);
+            // Forzar guardado en localStorage manualmente
+            try {
+              const state = getUiState();
+              localStorage.setItem("crawlbase-active-profile", JSON.stringify({
+                state: { activeProfile: profileToSelect },
+                version: 0,
+              }));
+            } catch (e) {
+              console.error("Error guardando en localStorage:", e);
+            }
           } else {
             console.log("useAutoSelectProfile - Perfil confirmado:", current.name, "ID:", current.id);
           }
