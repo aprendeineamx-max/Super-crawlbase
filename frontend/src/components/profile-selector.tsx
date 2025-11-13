@@ -136,12 +136,12 @@ export const ProfileSelector: React.FC = () => {
                 </span>
               )}
             </p>
-            <a
-              href="/profiles/new"
+            <Link
+              to="/profiles/new"
               className="block w-full text-center px-3 py-2 bg-primary/20 text-primary-foreground rounded-lg text-xs font-medium transition hover:bg-primary/30"
             >
               + Crear Perfil
-            </a>
+            </Link>
           </div>
         )}
         {filteredProfiles.map((profile: Profile) => (
