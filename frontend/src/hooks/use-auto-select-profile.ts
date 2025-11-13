@@ -21,11 +21,30 @@ export const useAutoSelectProfile = () => {
   });
 
   useEffect(() => {
+    // Auto-limpieza si detectamos problemas persistentes
+    const checkAndAutoFix = () => {
+      // Si no hay perfil después de 3 segundos y hay perfiles disponibles, limpiar localStorage
+      if (!activeProfile && profiles && profiles.length > 0 && !isLoading) {
+        const persisted = getUiState().activeProfile;
+        // Si hay un perfil persistido inválido, limpiarlo
+        if (persisted && persisted.id) {
+          const isValid = profiles.some((p: Profile) => p.id === persisted.id);
+          if (!isValid) {
+            console.warn("useAutoSelectProfile - Perfil persistido inválido, limpiando localStorage...");
+            localStorage.removeItem("crawlbase-active-profile");
+          }
+        }
+      }
+    };
+
     // Solo ejecutar cuando los perfiles estén cargados
     if (isLoading) {
       console.log("useAutoSelectProfile - Esperando carga de perfiles...");
       return;
     }
+
+    // Auto-fix después de un delay
+    setTimeout(checkAndAutoFix, 3000);
 
     // Si ya seleccionamos un perfil, no hacer nada más
     if (hasSelectedRef.current && activeProfile?.id) {

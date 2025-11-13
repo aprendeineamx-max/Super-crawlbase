@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileSelector } from "@/components/profile-selector";
+import { DebugPanel } from "@/components/debug-panel";
 import { useAutoSelectProfile } from "@/hooks/use-auto-select-profile";
 
 const routes = [
@@ -51,6 +52,7 @@ export const AppLayout: React.FC = () => {
       <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
         <Outlet />
       </main>
+      <DebugPanel />
     </div>
   );
 };
