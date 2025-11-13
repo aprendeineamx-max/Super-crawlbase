@@ -154,6 +154,24 @@ export const api = {
       const data = await request<unknown>(`/profiles/${profileId}?include_tokens=true`);
       return profileSchema.parse(data);
     },
+    create: async (data: {
+      name: string;
+      description?: string | null;
+      token_normal: string;
+      token_js?: string | null;
+      token_proxy?: string | null;
+      token_storage?: string | null;
+      default_product?: string | null;
+      is_active?: boolean;
+      tags?: string[];
+      metadata?: Record<string, any> | null;
+    }) => {
+      const response = await request<unknown>("/profiles", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+      return profileSchema.parse(response);
+    },
   },
   dashboard: {
     usage: async (

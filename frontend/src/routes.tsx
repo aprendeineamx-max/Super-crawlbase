@@ -24,6 +24,10 @@ export const routes = createBrowserRouter([
         element: <ProjectsPage />,
       },
       {
+        path: "profiles/new",
+        element: <ProfileCreatePage />,
+      },
+      {
         path: "docs",
         element: <DocumentationPage />,
       },
