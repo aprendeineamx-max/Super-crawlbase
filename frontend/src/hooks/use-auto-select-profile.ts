@@ -10,25 +10,26 @@ import { useUiState, getUiState } from "@/store/ui-state";
 export const useAutoSelectProfile = () => {
   const { activeProfile, setActiveProfile } = useUiState();
   const hasSelectedRef = useRef(false);
-  
+
   const { data: profiles, isLoading, error } = useQuery({
     queryKey: ["profiles"],
-    queryFn: api.profiles.list,
+    queryFn: () => api.profiles.list({ includeTokens: true }),
     retry: 3,
     retryDelay: 1000,
     refetchOnMount: true,
     staleTime: 0, // Siempre obtener datos frescos
   });
+  const profileList = profiles ?? [];
 
   useEffect(() => {
     // Auto-limpieza si detectamos problemas persistentes
     const checkAndAutoFix = () => {
       // Si no hay perfil después de 3 segundos y hay perfiles disponibles, limpiar localStorage
-      if (!activeProfile && profiles && profiles.length > 0 && !isLoading) {
+      if (!activeProfile && profileList.length > 0 && !isLoading) {
         const persisted = getUiState().activeProfile;
         // Si hay un perfil persistido inválido, limpiarlo
         if (persisted && persisted.id) {
-          const isValid = profiles.some((p: Profile) => p.id === persisted.id);
+          const isValid = profileList.some((p: Profile) => p.id === persisted.id);
           if (!isValid) {
             console.warn("useAutoSelectProfile - Perfil persistido inválido, limpiando localStorage...");
             localStorage.removeItem("crawlbase-active-profile");
@@ -63,7 +64,7 @@ export const useAutoSelectProfile = () => {
       return;
     }
 
-    if (!profiles || profiles.length === 0) {
+    if (profileList.length === 0) {
       console.warn("useAutoSelectProfile - No hay perfiles disponibles");
       // Intentar usar perfil persistido como respaldo
       const persisted = getUiState().activeProfile;
@@ -75,10 +76,14 @@ export const useAutoSelectProfile = () => {
       return;
     }
 
-    console.log("useAutoSelectProfile - Perfiles recibidos:", profiles.length, profiles.map((p: Profile) => p.name));
+    console.log(
+      "useAutoSelectProfile - Perfiles recibidos:",
+      profileList.length,
+      profileList.map((p: Profile) => p.name),
+    );
 
     // Filtrar "Nuevo Perfil"
-    const validProfiles = profiles.filter((p: Profile) => {
+    const validProfiles = profileList.filter((p: Profile) => {
       const nameLower = p.name.toLowerCase().trim();
       return (
         nameLower !== "nuevo perfil" &&
@@ -154,5 +159,5 @@ export const useAutoSelectProfile = () => {
     }
   }, [profiles, isLoading, error, activeProfile, setActiveProfile]);
 
-  return { profiles, isLoading, error };
+  return { profiles: profileList, isLoading, error };
 };

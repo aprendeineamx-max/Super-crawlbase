@@ -138,9 +138,12 @@ async function request<T>(path: string, init?: RequestInit) {
 
 export const api = {
   profiles: {
-    list: async () => {
+    list: async (options?: { includeTokens?: boolean }) => {
+      const includeTokens = options?.includeTokens ?? true;
       try {
-        const data = await request<unknown>("/profiles");
+        const data = await request<unknown>(
+          `/profiles?include_tokens=${includeTokens ? "true" : "false"}`
+        );
         console.log("API - Perfiles recibidos del backend:", data);
         const parsed = z.array(profileSchema).parse(data);
         console.log("API - Perfiles parseados correctamente:", parsed);

@@ -1,41 +1,34 @@
-import React, { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
 import { Link } from "react-router-dom";
-import { api, Profile } from "@/lib/api-client";
+import { Profile } from "@/lib/api-client";
 import { useUiState } from "@/store/ui-state";
 import { useAutoSelectProfile } from "@/hooks/use-auto-select-profile";
 import { ChevronDown, User } from "lucide-react";
 
 export const ProfileSelector: React.FC = () => {
   const { activeProfile, setActiveProfile } = useUiState();
-  
-  // Usar el hook personalizado para forzar la selección automática
-  useAutoSelectProfile();
-  
-  const { data: profiles, isLoading, error } = useQuery({
-    queryKey: ["profiles"],
-    queryFn: api.profiles.list,
-    retry: 3,
-    retryDelay: 1000,
-    refetchOnMount: true,
-  });
+
+  const { profiles, isLoading, error } = useAutoSelectProfile();
 
   // Debug: Log cuando cambian los perfiles
   React.useEffect(() => {
-    console.log("ProfileSelector - Estado:", { 
-      isLoading, 
-      profilesCount: profiles?.length ?? 0, 
+    console.log("ProfileSelector - Estado:", {
+      isLoading,
+      profilesCount: profiles.length,
       hasActiveProfile: !!activeProfile,
-      error: error ? String(error) : null
+      error: error ? String(error) : null,
     });
-    if (profiles && profiles.length > 0) {
-      console.log("ProfileSelector - Perfiles encontrados:", profiles.map((p: Profile) => ({ id: p.id, name: p.name })));
+    if (profiles.length) {
+      console.log(
+        "ProfileSelector - Perfiles encontrados:",
+        profiles.map((p: Profile) => ({ id: p.id, name: p.name })),
+      );
     }
   }, [profiles, isLoading, activeProfile, error]);
 
   // Filtrar perfiles que no sean "Nuevo Perfil" (case-insensitive y más estricto)
   const filteredProfiles = React.useMemo(() => {
-    if (!profiles || profiles.length === 0) {
+    if (profiles.length === 0) {
       console.log("ProfileSelector - No hay perfiles en la respuesta");
       return [];
     }
@@ -55,60 +48,6 @@ export const ProfileSelector: React.FC = () => {
     console.log("ProfileSelector - Perfiles después del filtrado:", filtered.length);
     return filtered;
   }, [profiles]);
-
-  // Efecto para seleccionar automáticamente el perfil demo
-  useEffect(() => {
-    // Esperar a que termine la carga
-    if (isLoading) {
-      return;
-    }
-    
-    // Si hay error, mostrarlo pero no bloquear
-    if (error) {
-      console.error("ProfileSelector - Error cargando perfiles:", error);
-    }
-    
-    // Si no hay perfiles filtrados, no hacer nada
-    if (filteredProfiles.length === 0) {
-      console.warn("ProfileSelector - No hay perfiles disponibles después del filtrado");
-      if (profiles && profiles.length > 0) {
-        console.warn("ProfileSelector - Perfiles antes del filtrado:", profiles.map((p: Profile) => ({ id: p.id, name: p.name })));
-      }
-      return;
-    }
-
-    console.log("ProfileSelector - Perfiles filtrados disponibles:", filteredProfiles.map((p: Profile) => ({ id: p.id, name: p.name })));
-
-    // Si ya hay un perfil activo válido, mantenerlo
-    if (activeProfile && activeProfile.id) {
-      const isStillValid = filteredProfiles.some((p: Profile) => p.id === activeProfile.id);
-      if (isStillValid) {
-        console.log("ProfileSelector - Perfil activo válido, manteniendo:", activeProfile.name);
-        return;
-      }
-      console.log("ProfileSelector - Perfil activo ya no válido, seleccionando nuevo");
-    }
-
-    // FORZAR selección del perfil demo o el primero disponible
-    const demoProfile = filteredProfiles.find((p: Profile) => {
-      const nameLower = p.name.toLowerCase();
-      return nameLower.includes("demo") || 
-             nameLower.includes("perfil demo") ||
-             nameLower === "perfil demo crawlbase";
-    });
-    
-    const profileToSelect = demoProfile || filteredProfiles[0];
-    
-    if (profileToSelect) {
-      console.log("ProfileSelector - FORZANDO selección de perfil:", profileToSelect.name, "ID:", profileToSelect.id);
-      // Usar setTimeout para asegurar que se ejecute después de que React termine de renderizar
-      setTimeout(() => {
-        setActiveProfile(profileToSelect);
-      }, 100);
-    } else {
-      console.error("ProfileSelector - ERROR: No se pudo seleccionar ningún perfil de", filteredProfiles.length, "perfiles disponibles");
-    }
-  }, [filteredProfiles, isLoading, error, profiles, activeProfile, setActiveProfile]);
 
   const label = activeProfile ? activeProfile.name : "Perfil";
 

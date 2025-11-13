@@ -42,7 +42,8 @@ class ProfileService:
         self.session = session
 
     def list(self, include_tokens: bool = False) -> Iterable[schemas.ProfileReadSchema]:
-        results = self.session.exec(select(models.Profile)).all()
+        query = select(models.Profile).order_by(models.Profile.created_at.asc())
+        results = self.session.exec(query).all()
         return [_to_schema(profile, include_tokens=include_tokens) for profile in results]
 
     def get(self, profile_id: int, include_tokens: bool = True) -> schemas.ProfileReadSchema:

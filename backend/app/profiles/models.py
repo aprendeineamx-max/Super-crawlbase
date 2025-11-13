@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Column
 from sqlalchemy.dialects.sqlite import JSON
+from sqlalchemy.orm import Mapped
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -25,7 +24,10 @@ class Profile(ProfileBase, table=True):
     metadata_enc: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    # projects: list["Project"] = Relationship(back_populates="profile", sa_relationship_kwargs={"lazy": "selectin"})
+    projects: Mapped[list["Project"]] = Relationship(
+        back_populates="profile",
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
 
 
 if TYPE_CHECKING:
