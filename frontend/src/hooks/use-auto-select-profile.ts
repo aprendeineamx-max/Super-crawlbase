@@ -133,13 +133,14 @@ export const useAutoSelectProfile = () => {
           if (!current || current.id !== profileToSelect.id) {
             console.log(`useAutoSelectProfile - Reintentando selección (delay ${delay}ms)...`);
             setActiveProfile(profileToSelect);
-            // Forzar guardado en localStorage manualmente
+            // Forzar guardado en localStorage manualmente usando el formato de Zustand
             try {
-              const state = getUiState();
-              localStorage.setItem("crawlbase-active-profile", JSON.stringify({
+              const serialized = JSON.stringify({
                 state: { activeProfile: profileToSelect },
                 version: 0,
-              }));
+              });
+              localStorage.setItem("crawlbase-active-profile", serialized);
+              console.log("useAutoSelectProfile - Perfil guardado manualmente en localStorage");
             } catch (e) {
               console.error("Error guardando en localStorage:", e);
             }

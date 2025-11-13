@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { api, Profile } from "@/lib/api-client";
 import { useUiState } from "@/store/ui-state";
 import { useAutoSelectProfile } from "@/hooks/use-auto-select-profile";
@@ -163,12 +164,12 @@ export const ProfileSelector: React.FC = () => {
         ))}
         {filteredProfiles.length > 0 && (
           <div className="mt-2 pt-2 border-t border-white/10">
-            <a
-              href="/profiles/new"
+            <Link
+              to="/profiles/new"
               className="block w-full text-center px-3 py-2 bg-white/5 text-slate-200 rounded-lg text-xs font-medium transition hover:bg-white/10"
             >
               + Nuevo Perfil
-            </a>
+            </Link>
           </div>
         )}
       </div>
