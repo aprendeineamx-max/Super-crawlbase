@@ -167,7 +167,7 @@ export const api = {
       default_product?: string | null;
       is_active?: boolean;
       tags?: string[];
-      metadata?: Record<string, any> | null;
+      metadata?: Record<string, unknown> | null;
     }) => {
       const response = await request<unknown>("/profiles", {
         method: "POST",

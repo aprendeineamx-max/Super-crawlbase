@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { useUiState } from "@/store/ui-state";
 import { Upload, Link2, FileText, X, CheckCircle2, Play, FolderOpen, Loader2 } from "lucide-react";
@@ -33,11 +32,6 @@ export const ScrapersPage: React.FC = () => {
   const [sheetName, setSheetName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
-
-  const { data: presets } = useQuery({
-    queryKey: ["link-presets"],
-    queryFn: api.linkFactory.presets,
-  });
 
   const handleGenerateUrls = async () => {
     if (!keyword.trim()) {
@@ -492,7 +486,7 @@ export const ScrapersPage: React.FC = () => {
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <FileText className="h-12 w-12 text-slate-500 mb-4" />
                 <p className="text-sm text-slate-400">
-                  No hay URLs generadas. Usa "Generar URLs" o "Abrir archivo de URLs" para comenzar.
+                  No hay URLs generadas. Usa &quot;Generar URLs&quot; o &quot;Abrir archivo de URLs&quot; para comenzar.
                 </p>
               </div>
             ) : (

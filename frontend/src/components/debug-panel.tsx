@@ -45,8 +45,9 @@ export const DebugPanel: React.FC = () => {
       });
       
       if (response.ok) {
-        const data = await response.json();
-        setLastAction(`✓ Backend está funcionando (vía proxy)`);
+        const payload = await response.json().catch(() => null);
+        const versionLabel = payload?.version ? ` v${payload.version}` : "";
+        setLastAction(`Backend operativo via proxy${versionLabel}`);
         
         // También verificar perfiles
         try {
@@ -55,14 +56,14 @@ export const DebugPanel: React.FC = () => {
           });
           if (profilesResponse.ok) {
             const profiles = await profilesResponse.json();
-            setLastAction(`✓ Backend OK - ${profiles.length} perfil(es) disponible(s)`);
+            setLastAction(`Backend OK - ${profiles.length} perfil(es) disponible(s)`);
           }
-        } catch (e) {
+        } catch {
           // Ignorar error de perfiles
         }
         return;
       } else {
-        setLastAction(`⚠ Backend responde pero con error (${response.status})`);
+        setLastAction(`Backend responde pero con error (${response.status})`);
         return;
       }
     } catch (proxyError) {
