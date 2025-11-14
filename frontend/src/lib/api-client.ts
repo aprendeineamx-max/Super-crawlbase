@@ -200,5 +200,28 @@ export const api = {
       return z.array(projectSchema).parse(data);
     },
   },
+  scrapers: {
+    scrape: async (data: {
+      urls: string[];
+      profile_id: number;
+      excel_path?: string | null;
+      sheet_name?: string | null;
+    }) => {
+      const response = await request<unknown>("/scrapers/scrape", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+      return response as {
+        success: boolean;
+        total_urls: number;
+        successful: number;
+        failed: number;
+        excel_path: string;
+        sheet_name: string;
+        message: string;
+        errors?: Array<{ url: string; error: string }>;
+      };
+    },
+  },
 };
 

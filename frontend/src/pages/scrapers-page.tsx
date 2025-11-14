@@ -2,9 +2,20 @@ import React, { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { useUiState } from "@/store/ui-state";
-import { Upload, Link2, FileText, X, CheckCircle2 } from "lucide-react";
+import { Upload, Link2, FileText, X, CheckCircle2, Play, FolderOpen, Loader2 } from "lucide-react";
 
 type ScraperType = "amazon" | "walmart" | "facebook" | "instagram";
+
+interface ScrapeResult {
+  success: boolean;
+  total_urls: number;
+  successful: number;
+  failed: number;
+  excel_path: string;
+  sheet_name: string;
+  message: string;
+  errors?: Array<{ url: string; error: string }>;
+}
 
 export const ScrapersPage: React.FC = () => {
   const { activeProfile } = useUiState();
@@ -15,7 +26,13 @@ export const ScrapersPage: React.FC = () => {
   const [fileUrls, setFileUrls] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
+  const [scrapeResult, setScrapeResult] = useState<ScrapeResult | null>(null);
+  const [excelPath, setExcelPath] = useState<string>("");
+  const [sheetName, setSheetName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const excelInputRef = useRef<HTMLInputElement>(null);
 
   const { data: presets } = useQuery({
     queryKey: ["link-presets"],
@@ -84,9 +101,89 @@ export const ScrapersPage: React.FC = () => {
     }
   };
 
+  const handleExcelPathSelect = () => {
+    excelInputRef.current?.click();
+  };
+
+  const handleExcelPathChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Guardar solo el nombre del archivo
+      // El backend buscará en el directorio output o usará la ruta si es absoluta
+      setExcelPath(file.name);
+    }
+  };
+
+  const handleStartScraping = async () => {
+    if (!activeProfile) {
+      alert("Por favor selecciona un perfil");
+      return;
+    }
+
+    if (urls.length === 0) {
+      alert("No hay URLs para scrapear. Genera o carga URLs primero.");
+      return;
+    }
+
+    setIsScraping(true);
+    setScrapeProgress({ current: 0, total: urls.length });
+    setScrapeResult(null);
+
+    try {
+      // Simular progreso mientras se ejecuta el scraping
+      const progressInterval = setInterval(() => {
+        setScrapeProgress((prev) => {
+          if (prev.current < prev.total) {
+            return { ...prev, current: Math.min(prev.current + 1, prev.total) };
+          }
+          return prev;
+        });
+      }, 500);
+
+      const result = await api.scrapers.scrape({
+        urls: urls,
+        profile_id: activeProfile.id,
+        excel_path: excelPath || null,
+        sheet_name: sheetName || null,
+      });
+
+      clearInterval(progressInterval);
+      setScrapeProgress({ current: urls.length, total: urls.length });
+      setScrapeResult(result);
+    } catch (error) {
+      console.error("Error durante el scraping:", error);
+      alert(`Error durante el scraping: ${error instanceof Error ? error.message : "Error desconocido"}`);
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
+  const handleOpenExcel = () => {
+    if (!scrapeResult?.excel_path) return;
+
+    // Descargar el archivo Excel desde el backend
+    const excelUrl = `/api/scrapers/download?path=${encodeURIComponent(scrapeResult.excel_path)}`;
+    
+    // Crear un enlace temporal para descargar
+    const link = document.createElement("a");
+    link.href = excelUrl;
+    link.download = scrapeResult.excel_path.split(/[/\\]/).pop() || "scraping.xlsx";
+    link.target = "_blank"; // Abrir en nueva pestaña
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Nota: El archivo se descargará y, si Excel está configurado como aplicación predeterminada,
+    // se abrirá automáticamente. Para abrir en una hoja específica, el usuario deberá hacerlo manualmente
+    // desde Excel (Ctrl+G y escribir el nombre de la hoja).
+  };
+
   const handleClearUrls = () => {
     setUrls([]);
     setFileUrls([]);
+    setScrapeResult(null);
+    setExcelPath("");
+    setSheetName("");
   };
 
   const handleExportUrls = () => {
@@ -121,7 +218,7 @@ export const ScrapersPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-semibold text-white">Scrapers</h1>
           <p className="text-sm text-slate-400">
-            Genera URLs para scraping o carga archivos existentes con listas de URLs.
+            Genera URLs para scraping, realiza scraping y guarda los resultados en Excel.
           </p>
         </div>
       </header>
@@ -181,8 +278,56 @@ export const ScrapersPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Configuración de Excel */}
+            <div className="space-y-4 pt-2 border-t border-white/10">
+              <div>
+                <label className="text-sm font-medium text-slate-300 mb-2 block">
+                  Archivo Excel (opcional)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={excelPath}
+                    onChange={(e) => setExcelPath(e.target.value)}
+                    placeholder="Nombre del archivo (ej: scraping.xlsx)..."
+                    className="flex-1 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  />
+                  <button
+                    onClick={handleExcelPathSelect}
+                    className="px-3 py-2 bg-white/5 text-slate-200 border border-white/10 rounded-lg hover:bg-white/10 transition"
+                    title="Seleccionar archivo Excel existente (solo para referencia del nombre)"
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                  </button>
+                </div>
+                <input
+                  ref={excelInputRef}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleExcelPathChange}
+                  className="hidden"
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  Deja vacío para crear un nuevo archivo. Si especificas un nombre de archivo existente en el directorio output, se creará una nueva hoja en ese archivo.
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-300 mb-2 block">
+                  Nombre de hoja (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={sheetName}
+                  onChange={(e) => setSheetName(e.target.value)}
+                  placeholder="Dejar vacío para nombre automático"
+                  className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                />
+              </div>
+            </div>
+
             {/* Botones de acción */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2 pt-2 border-t border-white/10">
               <button
                 onClick={handleGenerateUrls}
                 disabled={isGenerating || !keyword.trim()}
@@ -201,6 +346,24 @@ export const ScrapersPage: React.FC = () => {
                 {isLoadingFile ? "Cargando..." : "Abrir archivo de URLs"}
               </button>
 
+              <button
+                onClick={handleStartScraping}
+                disabled={isScraping || urls.length === 0}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium transition hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isScraping ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Scrapeando...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Iniciar Scraping
+                  </>
+                )}
+              </button>
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -214,6 +377,83 @@ export const ScrapersPage: React.FC = () => {
 
         {/* Panel derecho - Resultados */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Progreso del scraping */}
+          {isScraping && (
+            <div className="card p-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white">Scrapeando URLs...</h3>
+                  <span className="text-sm text-slate-400">
+                    {scrapeProgress.current} / {scrapeProgress.total}
+                  </span>
+                </div>
+                <div className="w-full bg-white/5 rounded-full h-2">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(scrapeProgress.current / scrapeProgress.total) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Resultado del scraping */}
+          {scrapeResult && (
+            <div className="card p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle2
+                  className={`h-5 w-5 ${scrapeResult.success ? "text-emerald-400" : "text-red-400"}`}
+                />
+                <h3 className="text-lg font-semibold text-white">Scraping Completado</h3>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-3 bg-white/5 rounded-lg">
+                  <p className="text-xs text-slate-400">Total URLs</p>
+                  <p className="text-2xl font-bold text-white">{scrapeResult.total_urls}</p>
+                </div>
+                <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                  <p className="text-xs text-emerald-300">Exitosos</p>
+                  <p className="text-2xl font-bold text-emerald-400">{scrapeResult.successful}</p>
+                </div>
+                <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                  <p className="text-xs text-red-300">Fallidos</p>
+                  <p className="text-2xl font-bold text-red-400">{scrapeResult.failed}</p>
+                </div>
+              </div>
+
+              <div className="p-3 bg-white/5 rounded-lg">
+                <p className="text-xs text-slate-400 mb-1">Archivo Excel</p>
+                <p className="text-sm text-white font-mono break-all">{scrapeResult.excel_path}</p>
+                <p className="text-xs text-slate-400 mt-1">Hoja: {scrapeResult.sheet_name}</p>
+              </div>
+
+              {scrapeResult.errors && scrapeResult.errors.length > 0 && (
+                <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                  <p className="text-xs text-red-300 mb-2">Errores:</p>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {scrapeResult.errors.map((error, idx) => (
+                      <p key={idx} className="text-xs text-red-400">
+                        {error.url}: {error.error}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={handleOpenExcel}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium transition hover:bg-primary/80"
+                title={`Abrir archivo Excel. La hoja "${scrapeResult.sheet_name}" contiene los resultados del scraping.`}
+              >
+                <FolderOpen className="h-4 w-4" />
+                Abrir Excel (Hoja: {scrapeResult.sheet_name})
+              </button>
+            </div>
+          )}
+
           <div className="card p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">
@@ -281,4 +521,3 @@ export const ScrapersPage: React.FC = () => {
     </div>
   );
 };
-
